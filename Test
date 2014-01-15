@@ -1,0 +1,113 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/*Verkettetet Listen sind nichts anderes als gewöhnliche Strukturen mit einem STRUKTURZEIGER vom selben Typ, wie es
+  die Struktur selbst ist.
+  Damit kann der ZEIGER innerhalb dieser Struktur die ADRESSE einer anderen Struktur vom selben Typ speichern.
+  Jede Struktur enthält so einen STRUKTURZEIGER, können Sie so eine Struktur nach der anderen anhängen.
+*/
+
+struct knoten {
+    int wert;
+    struct knoten *next; // STRUKTURZEIGER vom selben Typen wie STRUKTUR
+};
+
+typedef struct knoten Knoten_t;
+typedef struct knoten *KnotenPtr_t; // Pointer, vom Typ STRUKTURKZEIGER!
+KnotenPtr_t anfang = NULL; // STRUKTURZEIGER anfang mit NULL belegt!
+
+
+void einfuegenKnoten(KnotenPtr_t neu){
+        KnotenPtr_t hilfZeiger;
+        if (anfang == NULL){  /* ist ein Element in der Liste vorhanden? => Hat anfang immer noch den NULL-Zeiger,
+                                 ist es der erste Knoten der Liste, der hinzugefügt werden soll!*/
+            anfang = neu;     // Zeiger anfang bekommt die Adresse vom neuen Knoten, für den Speicher allokiert wurde (siehe Zeile 39 bzw. 47)
+            neu->next = NULL; // Zeiger des eingefügten Knotens bekommt den NULL Zeiger [struct_zeiger->element ENTSPRICHT: (*struct_zeiger).element]
+        }
+        else{                    // Nicht am Listenanfang! => Durchlaufen der komplett verketteten Liste bis man am Ende angekommen ist
+            hilfZeiger = anfang; // hilfZeiger fängt am Anfang der Liste an, da er dessen Adresse bekommt
+            while(hilfZeiger->next != NULL){
+                hilfZeiger = hilfZeiger->next; // hilfZeiger wird solange auf das nächste Element gesetzt, bis das nächste Element ein NULL Zeiger ist
+            }
+            hilfZeiger->next = neu; // Element, das den NULL-Zeiger enthielt bekommt die Adresse des neuen Knotens
+            neu->next = NULL;       // next-Zeiger des neuen Knotens bekommt anschliessend den NULL-Zeiger
+        }
+    }
+
+void neuerKnoten(void){
+        KnotenPtr_t neu = malloc(sizeof(Knoten_t)); // Heap Speicher für neues Element (= KnotenPtr_t neu = Pointer) angefordert!
+        if(neu == NULL){
+            printf("Kein Speicher vorhanden!?\n");
+            return;
+        }
+        printf("Wert fuer Knoten eingeben: ");
+        do {scanf("%d",&neu->wert); // Einlesen des Wertes für Strukturelement! // -> Dereferenzierungsoperator mit Zugriff auf die Struktur
+        } while (getchar() != '\n');
+        einfuegenKnoten(neu); // Übergabe der Adresse des neuen Knotens an Fkt. siehe Zeile 25 bzw. 33!
+        printf("\n");
+    }
+
+void knotenAuflisten (void){
+        KnotenPtr_t hilfZeiger = anfang; // hilfZeiger auf anfang setzen - logisch
+        while(hilfZeiger != NULL){       // solange hilfZeiger nicht NULL ist, gib die Werte aus!
+            printf("%d\n", hilfZeiger->wert);
+            hilfZeiger = hilfZeiger->next; // hilfZeiger auf das neue Element setzen
+        }
+        printf("\n");
+    }
+
+void loescheKnoten (int val){
+        KnotenPtr_t hilfZeiger1;
+        KnotenPtr_t hilfZeiger2;
+        if(anfang != NULL){                 // Ist überhaupt ein Knoten in der Liste vorhanden? (also anfang überprüfen!)
+
+            if(anfang->wert == val){        // Enthält erstes Element, den zu löschenden Wert?
+                hilfZeiger1 = anfang->next; /* hilfZeiger bekommt Adresse vom nächsten Element, auf welches von "anfang" verwiesen wird
+                                               neuer Anfang der Liste ist quasi das 2. Element*/
+                free(anfang);               // alter "anfang" wird gelöscht
+                anfang = hilfZeiger1;       // neuer "anfang" hat nun die Adresse vom 2. Element, dessen Adresse im hilfZeiger steht!
+            }
+            else {
+                hilfZeiger1 = anfang;       // hilfZeiger verweist auf Anfang
+
+                while(hilfZeiger1->next != NULL){ //solange NULL-Zeiger nicht erreicht, wird gesucht (NULL-Zeiger erreicht: Element nicht in Liste vorhanden!)
+                    hilfZeiger2 = hilfZeiger1->next; //hilfZeiger2 bekommt immer Adresse des nächsten Elements von hilfZeiger1
+
+                    if(hilfZeiger2->wert == val){
+                        hilfZeiger1->next = hilfZeiger2->next; /*Löschung Knoten: next-Zeiger vom Knoten hilfsZeiger1 zeigt auf next-Zeiger vom Knoten hilfZeiger2
+                                                                 Bsp: anfang - 1(hZ1) - 5(hZ2) - 10[hZ2->next -darauf zeigt- hz1->next] => */
+                        free(hilfZeiger2);  // Löschung reservierter Speicher
+                        break;
+                    }
+                    hilfZeiger1 = hilfZeiger2; // falls gesuchter Wert nicht gefunden wird (Zeile 75) - hZ1 bekommt adresse von hZ2
+                } //Ende while
+            } //Ende else
+        } //Ende if
+    }
+
+int main()
+{
+    int wahl, val;
+
+    do{
+        printf("-1- Neues Element hinzufuegen\n");
+        printf("-2- Element loeschen\n");
+        printf("-3- Alle Elemente auflisten\n");
+        printf("-0- Programmende\n");
+        printf("Ihre Auswahl: ");
+        scanf("%d", &wahl);
+        printf("\n");
+        switch (wahl){
+            case 1: neuerKnoten();
+                    break;
+            case 2: printf("Wert zum Löschen: ");
+                    scanf("%d", &val);
+                    loescheKnoten(val);
+                    break;
+            case 3: knotenAuflisten();
+                    break;
+        }
+      }
+     while (wahl != 0);
+     return EXIT_SUCCESS;
+}
